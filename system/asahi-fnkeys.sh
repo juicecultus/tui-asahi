@@ -20,7 +20,7 @@ KBD_MAX=$(cat "$KBD/max_brightness")
 set_brightness() {
     local cur=$(cat "$BL/brightness")
     local new=$((cur + $1))
-    [ $new -lt 0 ] && new=0
+    [ $new -lt 1 ] && new=1
     [ $new -gt $BL_MAX ] && new=$BL_MAX
     echo "$new" > "$BL/brightness"
 }
@@ -61,7 +61,7 @@ evtest "$KEYBOARD" 2>/dev/null | while read line; do
         beep
         refresh_tmux
     elif echo "$line" | grep -q "KEY_VOLUMEUP"; then
-        su - justin -c "XDG_RUNTIME_DIR=/run/user/$(id -u justin) wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%+"
+        su - justin -c "XDG_RUNTIME_DIR=/run/user/$(id -u justin) wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+"
         beep
         refresh_tmux
     elif echo "$line" | grep -q "KEY_MUTE"; then
