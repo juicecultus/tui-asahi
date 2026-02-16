@@ -7,7 +7,7 @@ Built for an Apple MacBook Air 15" M2 2023 (8-core Apple M2, 16GB RAM, 234GB NVM
 ![Matrix Green Theme](https://img.shields.io/badge/theme-matrix%20green-00ff41?style=flat-square&labelColor=0a0a0a)
 ![Fedora Asahi 42](https://img.shields.io/badge/fedora%20asahi-42-51A2DA?style=flat-square&logo=fedora)
 ![Apple M2](https://img.shields.io/badge/apple%20silicon-M2-999999?style=flat-square&logo=apple)
-![RAM Usage](https://img.shields.io/badge/idle%20RAM-~400MB-00ff41?style=flat-square&labelColor=0a0a0a)
+![RAM Usage](https://img.shields.io/badge/idle%20RAM-~162MB-00ff41?style=flat-square&labelColor=0a0a0a)
 
 ```
     _    _        __  __ ____  
@@ -32,8 +32,8 @@ A complete terminal-only desktop replacement with **50+ TUI tools**, all themed 
 | **File Manager** | `ranger` `nnn` | Visual file browsing with previews |
 | **Git** | `tig` | Full git TUI — log, diff, blame, staging |
 | **Network** | `iftop` `nethogs` `mtr` `speedtest-cli` `nmtui` | Traffic, bandwidth, WiFi config |
-| **Audio Visualizer** | `cava` | Real-time audio spectrum with green gradient |
-| **Music Player** | `cmus` `mpv` | Terminal music players |
+| **Audio Visualizer** | `cava` | Real-time audio spectrum (pipewire, built from source) |
+| **Music Player** | `cmus` `mpv` | Terminal music players (cmus built from source w/ ffmpeg) |
 | **Text Editor** | `micro` | Beginner-friendly terminal editor |
 | **Web Browser** | `w3m` | Terminal web browsing |
 | **IRC/Chat** | `irssi` | IRC client |
@@ -155,7 +155,7 @@ The prefix key is **`Ctrl-a`** (press Ctrl+a, release, then press the shortcut k
 | `Ctrl-a m` | `cmatrix` | Matrix digital rain |
 | `Ctrl-a T` | `tty-clock` | Terminal clock |
 | `Ctrl-a B` | `cbonsai` | Animated bonsai tree |
-| `Ctrl-a D` | Dashboard | Split layout: fastfetch + btop |
+| `Ctrl-a D` | Dashboard | 4-pane: btop + cava + fastfetch + cmatrix |
 | `Ctrl-a b` | `btop` | System monitor (matrix themed) |
 | `Ctrl-a g` | `gdu` | Disk usage analyzer |
 | `Ctrl-a n` | `ranger` | File manager |
@@ -164,11 +164,19 @@ The prefix key is **`Ctrl-a`** (press Ctrl+a, release, then press the shortcut k
 | `Ctrl-a i` | `iftop` | Network traffic monitor |
 | `Ctrl-a w` | `nmtui` | WiFi network manager |
 | `Ctrl-a v` | `cava` | Audio spectrum visualizer |
-| `Ctrl-a M` | `cmus` | Music player |
+| `Ctrl-a M` | `cmus` | Music player (m4a/aac/flac/mp3/opus) |
 | `Ctrl-a c` | `calcurse` | Calendar & scheduling |
 | `Ctrl-a R` | `newsboat` | RSS feed reader |
 | `Ctrl-a W` | `w3m` | Web browser (DuckDuckGo) |
 | `Ctrl-a H` | Cheatsheet | Full keybinding reference |
+
+### Keyboard Backlight (no dedicated hw keys on Air M2 15")
+
+| Key | Action |
+|-----|--------|
+| `Ctrl-a \` | Toggle kbd backlight on/off |
+| `Ctrl-a ]` | Kbd backlight up |
+| `Ctrl-a [` | Kbd backlight down |
 
 ---
 
@@ -221,34 +229,47 @@ The prefix key is **`Ctrl-a`** (press Ctrl+a, release, then press the shortcut k
 
 ## Dashboard Mode
 
-Press `Ctrl-a D` for a 2-pane dashboard optimized for the Liquid Retina display:
+Press `Ctrl-a D` for a 4-pane dashboard optimized for the Liquid Retina display:
 
 ```
-┌─────────────────────────┬─────────────────────────────┐
-│                         │                             │
-│      fastfetch          │          btop               │
-│    (system info)        │      (live monitor)         │
-│                         │                             │
-│         then            │                             │
-│                         │                             │
-│      cmatrix            │                             │
-│    (eye candy)          │                             │
-│                         │                             │
-└─────────────────────────┴─────────────────────────────┘
+┌────────────────────────┬──────────────────────┐
+│                        │                      │
+│        btop            │     fastfetch        │
+│    (live monitor)      │   (system info)      │
+│                        │                      │
+├────────────────────────┼──────────────────────┤
+│                        │                      │
+│        cava            │      cmatrix         │
+│  (audio visualizer)    │    (eye candy)       │
+│                        │                      │
+└────────────────────────┴──────────────────────┘
 ```
 
 ---
 
-## Matrix Screensaver
+## Fn Key Handler
 
-Automatic idle lock using `cmatrix`:
+A Python-based service (`asahi-fnkeys.py`) using `python3-evdev` handles media keys natively:
 
-| Power State | Timeout | 
-|-------------|---------|
-| **Battery** | 2 minutes |
-| **AC / Full** | 5 minutes |
+| Key | Action |
+|-----|--------|
+| **F1** | Display brightness down (floor: 1, prevents IDAC error) |
+| **F2** | Display brightness up |
+| **F10** | Toggle mute (with audio feedback) |
+| **F11** | Volume down (auto-unmutes if muted) |
+| **F12** | Volume up (capped at 100%, auto-unmutes) |
 
-Dynamically adjusts based on charge status. Any keypress exits back to your session.
+The handler grabs the keyboard exclusively via `evdev`, processes media keys internally, and forwards all other keys through a `uinput` virtual keyboard — no stray characters in the terminal.
+
+## Auto-Brightness
+
+A systemd service (`asahi-autobrightness.sh`) reads the ambient light sensor and smoothly adjusts display brightness:
+
+| Sensor | Path | Polling |
+|--------|------|--------|
+| Apple ALS (`aop-sensors-las`) | `/sys/bus/iio/devices/iio:device0/in_angl_raw` | Every 5s |
+
+Rolling average with smooth transitions. Minimum brightness floor of 10 to prevent driver errors.
 
 ---
 
@@ -264,6 +285,7 @@ tui-asahi/
 │
 ├── bin/
 │   ├── motd             # Login banner (system info, battery, temps)
+│   ├── kbdlight         # Keyboard backlight control (up/down/toggle)
 │   ├── screensaver      # Standalone matrix screensaver (backup)
 │   └── view             # Universal file viewer (images, PDF, video)
 │
@@ -281,7 +303,14 @@ tui-asahi/
 │   └── themes/
 │       └── matrix.theme # Custom matrix-green btop theme
 │
-├── cava/config          # Audio visualizer — green gradient
+├── system/
+│   ├── asahi-fnkeys.py          # Fn key handler (evdev + uinput)
+│   ├── asahi-fnkeys.sh          # Legacy bash handler (deprecated)
+│   ├── asahi-fnkeys.service     # Systemd service for fn keys
+│   ├── asahi-autobrightness.sh  # Auto-brightness daemon (ALS)
+│   └── asahi-autobrightness.service  # Systemd service for auto-brightness
+│
+├── cava/config          # Audio visualizer — green on black
 ├── tig/.tigrc           # Git TUI — green-on-black theme
 ├── newsboat/            # RSS reader config + starter feeds
 ├── calcurse/conf        # Calendar config
@@ -319,7 +348,13 @@ Everything uses a cohesive **Matrix Green** palette:
 | **Kernel** | 6.14.2-401.asahi.fc42.aarch64+16k |
 | **OS** | Fedora Linux Asahi Remix 42 |
 
-**Idle resource usage**: ~400MB RAM, 0% swap — leaving over 15GB free.
+**Idle resource usage**: ~162MB process memory (14GB+ available), 0% swap.
+
+**Disabled services** (to reduce idle footprint): `abrt`, `bluetooth`, `avahi`, `smartd`, `atd`, `firewalld`, `rsyslog`, `gssproxy`.
+
+**Console scaling**: Terminus 32px font (`ter-132b`) for ~200% DPI on 2880×1800.
+
+**Fn mode**: `fnmode=2` — top row sends media keys by default (brightness, volume, mute). Hold `fn` for F1–F12.
 
 ---
 
