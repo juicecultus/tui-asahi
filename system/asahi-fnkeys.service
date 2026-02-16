@@ -4,7 +4,7 @@ After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/asahi-fnkeys.sh
+ExecStart=/usr/bin/python3 /usr/local/bin/asahi-fnkeys.py
 Restart=always
 RestartSec=3
 
