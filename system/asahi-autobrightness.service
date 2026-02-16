@@ -1,0 +1,12 @@
+[Unit]
+Description=MacBook Air M2 Auto-Brightness (ALS)
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/asahi-autobrightness.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

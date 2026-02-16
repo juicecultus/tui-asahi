@@ -19,12 +19,7 @@ mono_option = average
 background = default
 foreground = green
 
-gradient = 1
-gradient_count = 4
-gradient_color_1 = '#003300'
-gradient_color_2 = '#006600'
-gradient_color_3 = '#00aa22'
-gradient_color_4 = '#00ff41'
+gradient = 0
 
 [smoothing]
 integral = 77
