@@ -35,19 +35,4 @@ else
     K=""
 fi
 
-# Update screensaver timeout based on power source (2min battery / 5min AC)
-# Uses file cache to avoid tmux commands that reset the idle timer
-BAT_ST=$(cat /sys/class/power_supply/macsmc-battery/status 2>/dev/null)
-LOCK_CACHE="/tmp/.tmux_lock_state"
-if [ "$BAT_ST" = "Discharging" ]; then
-    LOCK_T=120
-else
-    LOCK_T=300
-fi
-PREV=$(cat "$LOCK_CACHE" 2>/dev/null)
-if [ "$PREV" != "$LOCK_T" ]; then
-    echo "$LOCK_T" > "$LOCK_CACHE"
-    tmux set-option -g lock-after-time "$LOCK_T" 2>/dev/null
-fi
-
 echo "$D $V $K"

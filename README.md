@@ -255,9 +255,14 @@ A Python-based service (`asahi-fnkeys.py`) using `python3-evdev` handles media k
 |-----|--------|
 | **F1** | Display brightness down (floor: 1, prevents IDAC error) |
 | **F2** | Display brightness up |
+| **F7** | Previous track / restart (cmus) |
+| **F8** | Play / Pause (cmus) |
+| **F9** | Skip forward +10s (cmus) |
 | **F10** | Toggle mute (with audio feedback) |
-| **F11** | Volume down (auto-unmutes if muted) |
-| **F12** | Volume up (capped at 100%, auto-unmutes) |
+| **F11** | Volume down 10% (auto-unmutes if muted) |
+| **F12** | Volume up 10% (capped at 150% for convolver headroom, auto-unmutes) |
+
+Volume goes up to 150% because the default sink is Asahi's J415 convolver (speaker safety DSP) whose `default-volume` is 0.343. The `speakersafetyd` daemon independently protects speakers from damage.
 
 The handler grabs the keyboard exclusively via `evdev`, processes media keys internally, and forwards all other keys through a `uinput` virtual keyboard — no stray characters in the terminal.
 

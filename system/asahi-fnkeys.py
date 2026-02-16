@@ -30,6 +30,9 @@ MEDIA_KEYS = {
     ecodes.KEY_KBDILLUMDOWN,
     ecodes.KEY_KBDILLUMUP,
     ecodes.KEY_KBDILLUMTOGGLE,
+    ecodes.KEY_PREVIOUSSONG,
+    ecodes.KEY_PLAYPAUSE,
+    ecodes.KEY_NEXTSONG,
 }
 
 
@@ -84,13 +87,13 @@ def unmute_if_muted():
 
 def volume_up():
     unmute_if_muted()
-    run_as_user("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+")
+    run_as_user("wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 10%+")
     beep()
 
 
 def volume_down():
     unmute_if_muted()
-    run_as_user("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-")
+    run_as_user("wpctl set-volume @DEFAULT_AUDIO_SINK@ 10%-")
     beep()
 
 
@@ -125,6 +128,12 @@ def handle_media_key(code):
         set_kbd_backlight(KBD_STEP)
     elif code == ecodes.KEY_KBDILLUMTOGGLE:
         toggle_kbd_backlight()
+    elif code == ecodes.KEY_PLAYPAUSE:
+        run_as_user("/usr/local/bin/cmus-remote -u")
+    elif code == ecodes.KEY_PREVIOUSSONG:
+        run_as_user("/usr/local/bin/cmus-remote -r")
+    elif code == ecodes.KEY_NEXTSONG:
+        run_as_user("/usr/local/bin/cmus-remote -k +10")
     refresh_tmux()
 
 
