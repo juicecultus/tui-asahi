@@ -46,7 +46,7 @@ refresh_tmux() {
     su - justin -c "tmux refresh-client -S" 2>/dev/null &
 }
 
-evtest --grab "$KEYBOARD" 2>/dev/null | while read line; do
+evtest "$KEYBOARD" 2>/dev/null | while read line; do
     # Only act on key press events (value 1), not release (0) or repeat (2)
     echo "$line" | grep -q "EV_KEY.*value 1" || continue
 
