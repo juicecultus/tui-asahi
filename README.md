@@ -350,16 +350,24 @@ Everything uses a cohesive **Matrix Green** palette:
 | **Display** | 15.3" 2880x1800 Liquid Retina |
 | **WiFi** | Broadcom (wlp1s0f0 via brcmfmac) |
 | **Battery** | ~66Wh (macsmc-battery driver) |
-| **Kernel** | 6.14.2-401.asahi.fc42.aarch64+16k |
+| **Kernel** | 6.18.10-402.asahi.fc42.aarch64+16k |
 | **OS** | Fedora Linux Asahi Remix 42 |
 
-**Idle resource usage**: ~162MB process memory (14GB+ available), 0% swap.
+**Idle resource usage**: ~178MB process memory (13.7GB+ available), 0% swap, 22 services running.
 
-**Disabled services** (to reduce idle footprint): `abrt`, `bluetooth`, `avahi`, `smartd`, `atd`, `firewalld`, `rsyslog`, `gssproxy`.
+**Disabled services** (to reduce idle footprint): `abrt`, `abrt-vmcore`, `bluetooth`, `avahi`, `smartd`, `atd`, `firewalld`, `rsyslog`, `gssproxy`, `mdmonitor`, `multipathd`, `sssd`, `lvm2-monitor`, `udisks2`, `upower`, `NetworkManager-wait-online`, `NetworkManager-dispatcher`.
+
+**Gettys**: Reduced from 6 to 2 (tty1 + tty2). tty3–tty6 masked.
 
 **Console scaling**: Terminus 32px font (`ter-132b`) for ~200% DPI on 2880×1800.
 
 **Fn mode**: `fnmode=2` — top row sends media keys by default (brightness, volume, mute). Hold `fn` for F1–F12.
+
+**SSH hardened**: Root login disabled, password auth disabled, pubkey only.
+
+**Journal**: Capped at 50MB (`/etc/systemd/journald.conf.d/size.conf`).
+
+**Backups**: Btrfs snapshots (root + home) can be sent via `btrfs send | gzip` to remote storage.
 
 ---
 
@@ -375,7 +383,8 @@ All hardware is managed by **existing Asahi Linux kernel drivers** — no custom
 | Thermals | `macsmc_hwmon` | `/sys/class/hwmon/hwmon1/` |
 | Kbd backlight | `kbd_backlight` | `/sys/class/leds/kbd_backlight/` |
 | WiFi | `brcmfmac` | `wlp1s0f0` via NetworkManager |
-| Audio | `pipewire` + `asahi-ucm` | `wpctl` / `pw-cli` |
+| Audio | `pipewire` + `j415-convolver` | `wpctl` (via `speakersafetyd`) |
+| Ambient Light | `aop-sensors-las` (VD6286) | `/sys/bus/iio/devices/iio:device0/in_angl_raw` |
 | NVMe | `nvme` | `/dev/nvme0n1` |
 
 ---
