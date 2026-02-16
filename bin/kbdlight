@@ -1,0 +1,38 @@
+#!/bin/bash
+# Keyboard backlight control for MacBook Air M2 15"
+# Usage: kbdlight up|down|toggle|set <value>|status
+KBD="/sys/class/leds/kbd_backlight"
+MAX=$(cat "$KBD/max_brightness")
+CUR=$(cat "$KBD/brightness")
+STEP=25
+
+case "$1" in
+    up)
+        NEW=$((CUR + STEP))
+        [ $NEW -gt $MAX ] && NEW=$MAX
+        echo "$NEW" | sudo tee "$KBD/brightness" > /dev/null
+        echo "KBD: $NEW/$MAX"
+        ;;
+    down)
+        NEW=$((CUR - STEP))
+        [ $NEW -lt 0 ] && NEW=0
+        echo "$NEW" | sudo tee "$KBD/brightness" > /dev/null
+        echo "KBD: $NEW/$MAX"
+        ;;
+    toggle)
+        if [ "$CUR" -gt 0 ]; then
+            echo 0 | sudo tee "$KBD/brightness" > /dev/null
+            echo "KBD: OFF"
+        else
+            echo $((MAX / 2)) | sudo tee "$KBD/brightness" > /dev/null
+            echo "KBD: $((MAX / 2))/$MAX"
+        fi
+        ;;
+    set)
+        [ -n "$2" ] && echo "$2" | sudo tee "$KBD/brightness" > /dev/null
+        echo "KBD: $2/$MAX"
+        ;;
+    status|*)
+        echo "KBD: $CUR/$MAX"
+        ;;
+esac
