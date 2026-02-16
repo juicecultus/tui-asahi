@@ -266,15 +266,11 @@ Volume goes up to 150% because the default sink is Asahi's J415 convolver (speak
 
 The handler grabs the keyboard exclusively via `evdev`, processes media keys internally, and forwards all other keys through a `uinput` virtual keyboard — no stray characters in the terminal.
 
-## Auto-Brightness
+## Auto-Brightness (disabled)
 
-A systemd service (`asahi-autobrightness.sh`) reads the ambient light sensor and smoothly adjusts display brightness:
+The ALS sensor hardware (VD6286) is detected but **missing calibration firmware** (`apple/aop-als-cal.bin` — needs extraction from macOS). The sensor returns a stale value and cannot track ambient light changes. Auto-brightness daemon is disabled until Asahi Linux ships ALS calibration support.
 
-| Sensor | Path | Polling |
-|--------|------|--------|
-| Apple ALS (`aop-sensors-las`) | `/sys/bus/iio/devices/iio:device0/in_angl_raw` | Every 5s |
-
-Rolling average with smooth transitions. Minimum brightness floor of 10 to prevent driver errors.
+**Manual brightness**: Use **F1** / **F2** (10% steps, floor at 1 to prevent IDAC errors).
 
 ---
 
