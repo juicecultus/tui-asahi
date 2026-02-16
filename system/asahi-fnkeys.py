@@ -78,12 +78,18 @@ def run_as_user(cmd):
     )
 
 
+def unmute_if_muted():
+    run_as_user("wpctl set-mute @DEFAULT_AUDIO_SINK@ 0")
+
+
 def volume_up():
+    unmute_if_muted()
     run_as_user("wpctl set-volume -l 1.0 @DEFAULT_AUDIO_SINK@ 5%+")
     beep()
 
 
 def volume_down():
+    unmute_if_muted()
     run_as_user("wpctl set-volume @DEFAULT_AUDIO_SINK@ 5%-")
     beep()
 
