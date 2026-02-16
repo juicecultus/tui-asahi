@@ -266,9 +266,41 @@ Volume goes up to 150% because the default sink is Asahi's J415 convolver (speak
 
 The handler grabs the keyboard exclusively via `evdev`, processes media keys internally, and forwards all other keys through a `uinput` virtual keyboard — no stray characters in the terminal.
 
-## Auto-Brightness (disabled)
+## Hardware Support Status
 
-The ALS sensor hardware (VD6286) is detected but **missing calibration firmware** (`apple/aop-als-cal.bin` — needs extraction from macOS). The sensor returns a stale value and cannot track ambient light changes. Auto-brightness daemon is disabled until Asahi Linux ships ALS calibration support.
+Based on Asahi Linux kernel 6.18 and our testing:
+
+| Hardware | Status | Notes |
+|----------|--------|-------|
+| **Display** | ✅ Working | 2880×1800 Liquid Retina via `apple-drm`, notch detected (64px) |
+| **GPU** | ✅ Working | Apple AGX (OpenGL 4.6, Vulkan 1.3 via Mesa) |
+| **WiFi** | ✅ Working | Broadcom BCM4387 via `brcmfmac` |
+| **Bluetooth** | ✅ Available | `hci0` present, not blocked (disabled for RAM savings) |
+| **Speakers** | ✅ Working | J415 convolver + `speakersafetyd` for speaker protection |
+| **Microphone** | ✅ Working | 3-mic array via AOP (`aop_audio`), ALSA card `AppleJ415HPAI` |
+| **FaceTime Camera** | ✅ Working | 1080p@30fps via `apple-isp` at `/dev/video0` (also 1440p, 720p, 480p) |
+| **Keyboard** | ✅ Working | `dockchannel-hid` (Apple Internal Keyboard / Trackpad) |
+| **Trackpad** | ✅ Working | Multi-touch via `dockchannel-hid` |
+| **Keyboard Backlight** | ✅ Working | Sysfs `kbd_backlight` (0–255), controlled via `Ctrl-a \` `]` `[` |
+| **Display Backlight** | ✅ Working | `apple-panel-bl` (0–500), controlled via F1/F2 |
+| **Battery** | ✅ Working | `macsmc-battery` with cycle count, status, capacity |
+| **NVMe** | ✅ Working | Apple ANS2, btrfs + zstd compression |
+| **USB-C** | ✅ Working | Charging + USB2 (USB3 upstreaming in progress) |
+| **Suspend** | ✅ Working | `freeze` + `mem` supported (F6 key = suspend) |
+| **Lid switch** | ✅ Working | Suspend on close, wake on open |
+| **Ambient Light** | ❌ Not working | VD6286 sensor detected but ALS calibration firmware missing (see below) |
+| **Touch ID** | ❌ Not supported | SEP (Secure Enclave) driver incomplete upstream |
+| **Thunderbolt** | ❌ Not supported | USB-C ports work for USB/charging only, no TB/DP alt mode |
+
+### Ambient Light Sensor Limitation
+
+The ALS hardware (VD6286) is detected by the AOP but the kernel driver `iio_aop_als` fails to probe:
+
+```
+iio_aop_als als.1.auto: Direct firmware load for apple/aop-als-cal.bin failed with error -2
+```
+
+The calibration firmware `aop-als-cal.bin` must be extracted from Apple's device tree by **m1n1** (the bootloader), but this extraction is [not yet implemented](https://github.com/AsahiLinux/linux/pull/342) — PR #342 notes ALS is *"disabled pending some m1n1 work"*. The calibration data is not accessible from macOS's filesystem or IORegistry; it lives in the boot-time device tree passed by iBoot.
 
 **Manual brightness**: Use **F1** / **F2** (10% steps, floor at 1 to prevent IDAC errors).
 
@@ -371,17 +403,23 @@ Everything uses a cohesive **Matrix Green** palette:
 
 All hardware is managed by **existing Asahi Linux kernel drivers** — no custom modules:
 
-| Hardware | Driver | Sysfs Path |
-|----------|--------|------------|
+| Hardware | Driver | Sysfs / Device Path |
+|----------|--------|---------------------|
+| Display | `apple-drm` + `apple-dcp` | `/sys/class/drm/card2` |
 | Display backlight | `apple-panel-bl` | `/sys/class/backlight/apple-panel-bl/` |
+| GPU | `asahi` (AGX) | Mesa OpenGL 4.6 / Vulkan 1.3 |
 | Battery & power | `macsmc-battery` | `/sys/class/power_supply/macsmc-battery/` |
 | AC adapter | `macsmc-ac` | `/sys/class/power_supply/macsmc-ac/` |
 | Thermals | `macsmc_hwmon` | `/sys/class/hwmon/hwmon1/` |
 | Kbd backlight | `kbd_backlight` | `/sys/class/leds/kbd_backlight/` |
-| WiFi | `brcmfmac` | `wlp1s0f0` via NetworkManager |
+| Keyboard / Trackpad | `dockchannel-hid` | Apple Internal Keyboard / Trackpad |
+| WiFi | `brcmfmac` (BCM4387) | `wlp1s0f0` via NetworkManager |
+| Bluetooth | `hci0` | Available (disabled for RAM savings) |
 | Audio | `pipewire` + `j415-convolver` | `wpctl` (via `speakersafetyd`) |
-| Ambient Light | `aop-sensors-las` (VD6286) | `/sys/bus/iio/devices/iio:device0/in_angl_raw` |
-| NVMe | `nvme` | `/dev/nvme0n1` |
+| Microphone | `aop_audio` | ALSA card `AppleJ415HPAI` (3-mic array) |
+| FaceTime Camera | `apple-isp` | `/dev/video0` (1080p/1440p/720p @ 30fps) |
+| Ambient Light | `aop-sensors-las` (VD6286) | ❌ Needs `aop-als-cal.bin` (not yet extracted by m1n1) |
+| NVMe | `nvme` (Apple ANS2) | `/dev/nvme0n1` |
 
 ---
 
