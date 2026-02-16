@@ -285,12 +285,13 @@ Based on Asahi Linux kernel 6.18 and our testing:
 | **Display Backlight** | ✅ Working | `apple-panel-bl` (0–500), controlled via F1/F2 |
 | **Battery** | ✅ Working | `macsmc-battery` with cycle count, status, capacity |
 | **NVMe** | ✅ Working | Apple ANS2, btrfs + zstd compression |
-| **USB-C** | ✅ Working | Charging + USB2 (USB3 upstreaming in progress) |
+| **USB-C** | ✅ Working | Charging + USB2 (USB3 upstreaming in progress via ATCPHY) |
 | **Suspend** | ✅ Working | `freeze` + `mem` supported (F6 key = suspend) |
 | **Lid switch** | ✅ Working | Suspend on close, wake on open |
 | **Ambient Light** | ❌ Not working | VD6286 sensor detected but ALS calibration firmware missing (see below) |
 | **Touch ID** | ❌ Not supported | SEP (Secure Enclave) driver incomplete upstream |
-| **Thunderbolt** | ❌ Not supported | USB-C ports work for USB/charging only, no TB/DP alt mode |
+| **DisplayPort** | ✅ Supported | DP 1.4 alt mode via USB-C (`phy_apple_atc` + `apple-display-crossbar` loaded) |
+| **Thunderbolt** | ❌ Not supported | USB4 tunneling not yet available |
 
 ### Ambient Light Sensor Limitation
 
@@ -418,6 +419,8 @@ All hardware is managed by **existing Asahi Linux kernel drivers** — no custom
 | Audio | `pipewire` + `j415-convolver` | `wpctl` (via `speakersafetyd`) |
 | Microphone | `aop_audio` | ALSA card `AppleJ415HPAI` (3-mic array) |
 | FaceTime Camera | `apple-isp` | `/dev/video0` (1080p/1440p/720p @ 30fps) |
+| DisplayPort | `phy_apple_atc` + `apple-display-crossbar` | DP 1.4 alt mode via USB-C (3 TypeC ports) |
+| USB-C / TypeC | `tps6598x` + `typec` | `/sys/class/typec/port0..2` |
 | Ambient Light | `aop-sensors-las` (VD6286) | ❌ Needs `aop-als-cal.bin` (not yet extracted by m1n1) |
 | NVMe | `nvme` (Apple ANS2) | `/dev/nvme0n1` |
 
